@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stok Kasir</title>
+<title>Kasir, Produksi &amp; HPP</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -24,16 +24,13 @@
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.45 "Plus Jakarta Sans", system-ui, sans-serif; }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px 16px 96px; }
   header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0 14px; }
   h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
   .live { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--muted); }
   .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); }
   .dot.off { background: var(--bad); }
-  input[type=search], input[type=number], input[type=password], input[type=text] {
-    width: 100%; padding: 12px 14px; font: inherit; color: var(--ink); background: var(--surface);
-    border: 1.5px solid var(--line); border-radius: 10px;
-  }
+  input, select { width: 100%; padding: 12px 14px; font: inherit; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 10px; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   .chips { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
   .chip { padding: 8px 14px; font: 500 .9rem inherit; font-family: inherit; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 999px; cursor: pointer; }
@@ -49,17 +46,22 @@
   .btn { padding: 10px 16px; font: 700 .95rem inherit; font-family: inherit; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
   .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
   .btn:disabled { opacity: .4; cursor: not-allowed; }
-  .empty { padding: 28px 16px; text-align: center; color: var(--muted); }
-  dialog { width: min(92vw, 380px); padding: 20px; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); }
+  .empty { padding: 28px 16px; text-align: center; color: var(--muted); display: block; }
+  .hint { margin: 8px 0 0; font-size: .85rem; color: var(--muted); }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .card { background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; padding: 16px; }
+  .sum { margin: 0 0 12px; padding: 12px 14px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; font-size: .9rem; white-space: pre-line; }
+  .prev { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--ok-bg); color: var(--ink); font-size: .9rem; font-weight: 500; white-space: pre-line; min-height: 1em; }
+  .pk { display: grid; grid-template-columns: 1fr 110px auto; gap: 8px; margin-bottom: 8px; }
+  label { display: block; margin: 14px 0 6px; font-size: .85rem; font-weight: 500; color: var(--muted); }
+  dialog { width: min(92vw, 400px); padding: 20px; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); }
   dialog::backdrop { background: rgba(0,0,0,.45); }
   dialog h2 { margin: 0 0 4px; font-size: 1.15rem; }
-  label { display: block; margin: 14px 0 6px; font-size: .85rem; font-weight: 500; color: var(--muted); }
   .total { margin-top: 12px; font-weight: 700; }
   .err { min-height: 1.3em; margin-top: 10px; color: var(--bad); font-size: .9rem; }
   .row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
-  .wrap { padding-bottom: 96px; }
   .cartbar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1.5px solid var(--line); }
-  .cartbar[hidden] { display: none; }
+  .cartbar[hidden], section[hidden] { display: none; }
   .cartbar .in { max-width: 760px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .cartbar b { font-size: 1.1rem; font-variant-numeric: tabular-nums; }
   .lines { margin: 12px 0 0; max-height: 40vh; overflow: auto; border: 1.5px solid var(--line); border-radius: 12px; }
@@ -68,11 +70,7 @@
   .step { display: flex; align-items: center; gap: 6px; }
   .step button { width: 34px; height: 34px; font: 700 1.1rem inherit; font-family: inherit; color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 8px; cursor: pointer; }
   .step span { min-width: 26px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .tabs { margin-top: 0; }
-  .sum { margin: 0 0 12px; padding: 12px 14px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; font-size: .9rem; color: var(--muted); }
-  .hint { margin: 8px 0 0; font-size: .85rem; color: var(--muted); }
-  section[hidden] { display: none; }
-  #toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  #toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); width: max-content; max-width: 90vw; background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
   #toast.show { opacity: 1; }
   @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
 </style>
@@ -80,36 +78,59 @@
 <body>
 <div class="wrap">
   <header>
-    <h1>Stok barang</h1>
+    <h1>Kasir &amp; HPP</h1>
     <div class="live" role="status"><span class="dot" id="dot"></span><span id="status">Memuat…</span></div>
   </header>
 
-  <div class="chips tabs" id="tabs">
+  <div class="chips" id="tabs" style="margin-top:0">
     <button class="chip" data-t="Kasir" aria-pressed="true">Kasir</button>
-    <button class="chip" data-t="Bahan" aria-pressed="false">Bahan baku</button>
-    <button class="chip" data-t="Hpp" aria-pressed="false">HPP</button>
+    <button class="chip" data-t="Bahan" aria-pressed="false">Bahan</button>
+    <button class="chip" data-t="Prod" aria-pressed="false">Produksi</button>
+    <button class="chip" data-t="Produk" aria-pressed="false">Produk &amp; HPP</button>
   </div>
 
   <section id="pKasir">
-  <input type="search" id="q" placeholder="Cari nama atau kode barang" aria-label="Cari barang" autocomplete="off">
-  <div class="chips" id="chips">
-    <button class="chip" data-f="all" aria-pressed="true">Semua</button>
-    <button class="chip" data-f="low" aria-pressed="false">Menipis</button>
-    <button class="chip" data-f="out" aria-pressed="false">Habis</button>
-  </div>
-
-  <ul id="list" aria-live="polite"></ul>
-    <p class="hint">Angka di kanan = porsi yang masih bisa dibuat dari stok bahan.</p>
+    <input type="search" id="q" placeholder="Cari nama atau kode produk" aria-label="Cari produk" autocomplete="off">
+    <div class="chips" id="chips">
+      <button class="chip" data-f="all" aria-pressed="true">Semua</button>
+      <button class="chip" data-f="low" aria-pressed="false">Menipis</button>
+      <button class="chip" data-f="out" aria-pressed="false">Habis</button>
+    </div>
+    <ul id="list" aria-live="polite"></ul>
   </section>
 
   <section id="pBahan" hidden>
-    <p class="hint" style="margin:0 0 10px">Catat belanja bahan, kemasan, dan stiker di sini. Stok dan harga rata-rata ikut diperbarui.</p>
+    <div class="bar"><span class="hint" style="margin:0">Catat belanja bahan, kemasan, dan barang lain.</span><button class="btn" id="bBaru" type="button">+ Bahan baru</button></div>
     <ul id="listB"></ul>
   </section>
 
-  <section id="pHpp" hidden>
-    <div class="sum" id="hSum"></div>
-    <ul id="listH"></ul>
+  <section id="pProd" hidden>
+    <div class="card">
+      <label for="xProduk" style="margin-top:0">Produk yang dihasilkan</label>
+      <select id="xProduk"></select>
+      <label for="xHasil">Total hasil (unit)</label>
+      <input type="number" id="xHasil" min="0" step="any" inputmode="decimal">
+      <label>Bahan &amp; barang yang dipakai</label>
+      <div id="xPakai"></div>
+      <button class="btn ghost" id="xTambah" type="button">+ Tambah bahan</button>
+      <label for="xTk">Tenaga kerja (Rp)</label>
+      <input type="number" id="xTk" min="0" inputmode="numeric">
+      <label for="xListrik">Listrik (Rp)</label>
+      <input type="number" id="xListrik" min="0" inputmode="numeric">
+      <label for="xLain">Biaya lain (Rp)</label>
+      <input type="number" id="xLain" min="0" inputmode="numeric">
+      <div class="prev" id="xPrev"></div>
+      <label for="xPin">PIN kasir</label>
+      <input type="password" id="xPin" inputmode="numeric" autocomplete="off">
+      <div class="err" id="xErr" role="alert"></div>
+      <div class="row"><button class="btn" id="xOk" type="button">Simpan produksi</button></div>
+    </div>
+  </section>
+
+  <section id="pProduk" hidden>
+    <div class="sum" id="pSum"></div>
+    <div class="bar"><span class="hint" style="margin:0">HPP terisi otomatis dari produksi.</span><button class="btn" id="pBaru" type="button">+ Produk baru</button></div>
+    <ul id="listP"></ul>
   </section>
 </div>
 
@@ -134,22 +155,16 @@
     <button class="btn" id="dOk" type="button">Catat penjualan</button>
   </div>
 </dialog>
-<dialog id="bDlg">
-  <h2 id="bNama"></h2>
-  <div class="sub" id="bInfo"></div>
-  <label for="bQty">Jumlah dibeli</label>
-  <input type="number" id="bQty" min="0" step="any" inputmode="decimal">
-  <label for="bTotal">Total harga belanja (Rp)</label>
-  <input type="number" id="bTotal" min="0" step="any" inputmode="numeric">
-  <div class="total" id="bUnit"></div>
-  <label for="bSup">Supplier (opsional)</label>
-  <input type="text" id="bSup" maxlength="60" autocomplete="off">
-  <label for="bPin">PIN kasir</label>
-  <input type="password" id="bPin" inputmode="numeric" autocomplete="off">
-  <div class="err" id="bErr" role="alert"></div>
+
+<dialog id="fDlg">
+  <h2 id="fTitle"></h2>
+  <div class="sub" id="fInfo"></div>
+  <div id="fBox"></div>
+  <div class="prev" id="fPrev" style="display:none"></div>
+  <div class="err" id="fErr" role="alert"></div>
   <div class="row">
-    <button class="btn ghost" id="bBatal" type="button">Batal</button>
-    <button class="btn" id="bOk" type="button">Catat pembelian</button>
+    <button class="btn ghost" id="fBatal" type="button">Batal</button>
+    <button class="btn" id="fOk" type="button">Simpan</button>
   </div>
 </dialog>
 <div id="toast" role="status"></div>
@@ -159,235 +174,265 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbz9tY6-MnrtDzbvQjb659l4rxhjRYoWtOIf_x048cxfSSPf3TMsGJz9PgxMAfxYCfYB4w/exec";
 const REFRESH_MS = 10000;
 
-let items = [], bahan = [], ovh = { total: 0, target: 0, perPorsi: 0 }, filter = "all", tab = "Kasir", bCur = null;
-const cart = {}; // kode -> jumlah
+let items = [], bahan = [], lap = null, filter = "all", tab = "Kasir", sigB = "", sigP = "";
+const cart = {};                       // kode produk -> jumlah
+let pk = [{ kode: "", qty: "" }];      // bahan yang dipakai di form produksi
 const $ = id => document.getElementById(id);
-const rp = n => "Rp" + Number(n).toLocaleString("id-ID");
+const rp = n => "Rp" + Number(n).toLocaleString("id-ID", { maximumFractionDigits: 0 });
+const fmt = n => Number(n).toLocaleString("id-ID", { maximumFractionDigits: 2 });
+const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
 const find = k => items.find(i => i.kode === k);
+const pct = (l, h) => h ? Math.round(l / h * 100) + "%" : "–";
+const getPin = () => { try { return localStorage.getItem("pin") || ""; } catch (e) { return ""; } };
+const setPin = p => { try { localStorage.setItem("pin", p); } catch (e) {} };
 
-function kelas(i) { return i.stok <= 0 ? "out" : i.stok <= i.min ? "low" : ""; }
-function cartTotal() { return Object.keys(cart).reduce((t, k) => t + (find(k) ? find(k).harga * cart[k] : 0), 0); }
-function cartCount() { return Object.keys(cart).reduce((t, k) => t + cart[k], 0); }
+async function post(body) {
+  try {
+    // text/plain agar tidak memicu preflight CORS di Apps Script
+    const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(body) });
+    return await r.json();
+  } catch (e) { return { ok: false, error: "Koneksi gagal. Coba lagi." }; }
+}
+function toast(t) { const e = $("toast"); e.textContent = t; e.classList.add("show"); setTimeout(() => e.classList.remove("show"), 3500); }
+function empty(ul, t) { ul.appendChild(el("li", "empty", t)); }
+
+/* ---------- Kasir ---------- */
+const kelas = i => i.stok <= 0 ? "out" : i.stok <= i.min ? "low" : "";
+const cartTotal = () => Object.keys(cart).reduce((t, k) => t + (find(k) ? find(k).harga * cart[k] : 0), 0);
+const cartCount = () => Object.keys(cart).reduce((t, k) => t + cart[k], 0);
 
 function render() {
   const q = $("q").value.trim().toLowerCase();
   const rows = items.filter(i =>
     (!q || i.nama.toLowerCase().includes(q) || i.kode.toLowerCase().includes(q)) &&
-    (filter === "all" || (filter === "out" ? i.stok <= 0 : i.stok <= i.min))
-  );
-  const ul = $("list");
-  ul.textContent = "";
-  if (!rows.length) {
-    const li = document.createElement("li");
-    li.className = "empty";
-    li.style.display = "block";
-    li.textContent = items.length ? "Tidak ada barang yang cocok." : "Belum ada data stok.";
-    ul.appendChild(li);
-  }
+    (filter === "all" || (filter === "out" ? i.stok <= 0 : i.stok <= i.min)));
+  const ul = $("list"); ul.textContent = "";
+  if (!rows.length) empty(ul, items.length ? "Tidak ada produk yang cocok." : "Belum ada produk. Tambahkan di tab Produk & HPP.");
   rows.forEach(i => {
-    const li = document.createElement("li");
-    const info = document.createElement("div");
-    const n = document.createElement("div"); n.className = "nama"; n.textContent = i.nama;
-    const s = document.createElement("div"); s.className = "sub"; s.textContent = i.kode + " · " + rp(i.harga);
-    info.append(n, s);
-    const st = document.createElement("div"); st.className = "stok " + kelas(i); st.textContent = i.stok;
-    st.title = "Stok minimum: " + i.min;
-    const b = document.createElement("button"); b.className = "btn";
-    b.textContent = cart[i.kode] ? "Tambah (" + cart[i.kode] + ")" : "Tambah";
+    const li = el("li"), info = el("div");
+    info.append(el("div", "nama", i.nama), el("div", "sub", i.kode + " · " + (i.harga ? rp(i.harga) : "harga belum diisi")));
+    const st = el("div", "stok " + kelas(i), fmt(i.stok)); st.title = "Stok minimum: " + i.min;
+    const b = el("button", "btn", cart[i.kode] ? "Tambah (" + cart[i.kode] + ")" : "Tambah");
     b.disabled = i.stok <= 0 || (cart[i.kode] || 0) >= i.stok;
     b.onclick = () => { cart[i.kode] = (cart[i.kode] || 0) + 1; render(); };
-    li.append(info, st, b);
-    ul.appendChild(li);
+    li.append(info, st, b); ul.appendChild(li);
   });
   renderBar();
 }
-
 function renderBar() {
   const c = cartCount();
   $("cartbar").hidden = c === 0 || tab !== "Kasir";
-  $("cCount").textContent = c + " barang";
-  $("cBar").textContent = rp(cartTotal());
+  $("cCount").textContent = c + " barang"; $("cBar").textContent = rp(cartTotal());
 }
-
 function renderLines() {
-  const box = $("lines");
-  box.textContent = "";
-  const ks = Object.keys(cart);
-  if (!ks.length) { box.className = "lines empty"; box.textContent = "Keranjang kosong."; }
-  else box.className = "lines";
+  const box = $("lines"), ks = Object.keys(cart);
+  box.textContent = ""; box.className = ks.length ? "lines" : "lines empty";
+  if (!ks.length) box.textContent = "Keranjang kosong.";
   ks.forEach(k => {
     const it = find(k); if (!it) return;
-    const row = document.createElement("div"); row.className = "line";
-    const info = document.createElement("div");
-    const n = document.createElement("div"); n.className = "nama"; n.textContent = it.nama;
-    const s = document.createElement("div"); s.className = "sub"; s.textContent = rp(it.harga) + " × " + cart[k] + " = " + rp(it.harga * cart[k]);
-    info.append(n, s);
-    const step = document.createElement("div"); step.className = "step";
-    const minus = document.createElement("button"); minus.type = "button"; minus.textContent = "−"; minus.setAttribute("aria-label", "Kurangi " + it.nama);
-    const num = document.createElement("span"); num.textContent = cart[k];
-    const plus = document.createElement("button"); plus.type = "button"; plus.textContent = "+"; plus.setAttribute("aria-label", "Tambah " + it.nama);
+    const row = el("div", "line"), info = el("div");
+    info.append(el("div", "nama", it.nama), el("div", "sub", rp(it.harga) + " × " + cart[k] + " = " + rp(it.harga * cart[k])));
+    const step = el("div", "step");
+    const minus = el("button", null, "−"), plus = el("button", null, "+");
+    minus.type = plus.type = "button"; minus.setAttribute("aria-label", "Kurangi " + it.nama); plus.setAttribute("aria-label", "Tambah " + it.nama);
     plus.disabled = cart[k] >= it.stok;
-    minus.onclick = () => { cart[k]--; if (cart[k] <= 0) delete cart[k]; refreshDialog(); };
-    plus.onclick = () => { if (cart[k] < it.stok) cart[k]++; refreshDialog(); };
-    step.append(minus, num, plus);
-    row.append(info, step);
-    box.appendChild(row);
+    minus.onclick = () => { cart[k]--; if (cart[k] <= 0) delete cart[k]; renderLines(); render(); if (!cartCount()) $("dlg").close(); };
+    plus.onclick = () => { if (cart[k] < it.stok) cart[k]++; renderLines(); render(); };
+    step.append(minus, el("span", null, cart[k]), plus); row.append(info, step); box.appendChild(row);
   });
-  $("dTotal").textContent = "Total " + rp(cartTotal());
-  $("dOk").disabled = ks.length === 0;
+  $("dTotal").textContent = "Total " + rp(cartTotal()); $("dOk").disabled = !ks.length;
 }
-
-function refreshDialog() {
-  renderLines(); render();
-  if (!cartCount()) $("dlg").close();
-}
-
-async function load() {
-  try {
-    const r = await fetch(API_URL, { cache: "no-store" });
-    const d = await r.json();
-    if (!d.ok) throw new Error();
-    items = d.items; bahan = d.bahan; ovh = d.overhead;
-    // sesuaikan keranjang dengan stok terbaru
-    Object.keys(cart).forEach(k => {
-      const it = find(k);
-      if (!it || it.stok <= 0) delete cart[k];
-      else if (cart[k] > it.stok) cart[k] = it.stok;
-    });
-    $("dot").classList.remove("off");
-    $("status").textContent = "Diperbarui " + new Date().toLocaleTimeString("id-ID");
-    render(); renderBahan(); renderHpp();
-    if ($("dlg").open) renderLines();
-  } catch (e) {
-    $("dot").classList.add("off");
-    $("status").textContent = "Gagal memuat, mencoba lagi…";
-  }
-}
-
-$("cOpen").onclick = () => {
-  try { $("dPin").value = localStorage.getItem("pin") || ""; } catch (e) {}
-  $("dErr").textContent = "";
-  renderLines();
-  $("dlg").showModal();
-  $("dBeli").focus();
-};
+$("cOpen").onclick = () => { $("dPin").value = getPin(); $("dErr").textContent = ""; renderLines(); $("dlg").showModal(); $("dBeli").focus(); };
 $("dBatal").onclick = () => $("dlg").close();
-
 $("dOk").onclick = async () => {
-  const pin = $("dPin").value;
-  const list = Object.keys(cart).map(k => ({ kode: k, qty: cart[k] }));
+  const pin = $("dPin").value, list = Object.keys(cart).map(k => ({ kode: k, qty: cart[k] }));
   if (!list.length) return;
   if (!pin) { $("dErr").textContent = "Isi PIN kasir."; return; }
   $("dOk").disabled = true; $("dOk").textContent = "Menyimpan…";
-  try {
-    // text/plain agar tidak memicu preflight CORS di Apps Script
-    const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({ action: "jual", items: list, pin, pembeli: $("dBeli").value.trim() }) });
-    const d = await r.json();
-    if (!d.ok) { $("dErr").textContent = d.error; return; }
-    try { localStorage.setItem("pin", pin); } catch (e) {}
-    Object.keys(cart).forEach(k => delete cart[k]);
-    $("dBeli").value = "";
-    $("dlg").close();
-    toast("Tercatat. Total " + rp(d.total));
-    await load();
-  } catch (e) {
-    $("dErr").textContent = "Koneksi gagal. Coba lagi.";
-  } finally {
-    $("dOk").disabled = false; $("dOk").textContent = "Catat penjualan";
-  }
+  const d = await post({ action: "jual", items: list, pin, pembeli: $("dBeli").value.trim() });
+  $("dOk").disabled = false; $("dOk").textContent = "Catat penjualan";
+  if (!d.ok) { $("dErr").textContent = d.error; return; }
+  setPin(pin); Object.keys(cart).forEach(k => delete cart[k]); $("dBeli").value = "";
+  $("dlg").close(); toast("Tercatat. Total " + rp(d.total) + " · laba " + rp(d.laba)); load();
+};
+$("q").oninput = render;
+$("chips").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  filter = b.dataset.f; document.querySelectorAll("#chips .chip").forEach(c => c.setAttribute("aria-pressed", c === b)); render();
 };
 
-function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 3000); }
+/* ---------- Dialog form umum (beli, bahan baru, produk baru, harga) ---------- */
+let fCfg = null;
+const fAll = () => fCfg.fields.concat([{ k: "pin" }]);
+function fVals() { const v = {}; fAll().forEach(f => v[f.k] = $("f_" + f.k).value.trim()); return v; }
+function fPrev() {
+  const t = fCfg.prev ? fCfg.prev(fVals()) : "";
+  $("fPrev").textContent = t; $("fPrev").style.display = t ? "block" : "none";
+}
+function ask(cfg) {
+  fCfg = cfg; $("fTitle").textContent = cfg.title; $("fInfo").textContent = cfg.info || "";
+  const box = $("fBox"); box.textContent = "";
+  cfg.fields.concat([{ k: "pin", label: "PIN kasir", type: "password", val: getPin() }]).forEach(f => {
+    const l = el("label", null, f.label), i = el("input");
+    l.htmlFor = i.id = "f_" + f.k; i.type = f.type || "text"; i.maxLength = 60; i.autocomplete = "off";
+    if (i.type === "number") { i.step = "any"; i.min = "0"; i.inputMode = "decimal"; }
+    if (f.ph) i.placeholder = f.ph; if (f.val !== undefined) i.value = f.val;
+    i.oninput = fPrev; box.append(l, i);
+  });
+  $("fErr").textContent = ""; $("fOk").textContent = cfg.ok || "Simpan"; fPrev();
+  $("fDlg").showModal(); box.querySelector("input").focus();
+}
+$("fBatal").onclick = () => $("fDlg").close();
+$("fOk").onclick = async () => {
+  const v = fVals();
+  if (!v.pin) { $("fErr").textContent = "Isi PIN kasir."; return; }
+  $("fOk").disabled = true;
+  const d = await post(Object.assign({ action: fCfg.action, pin: v.pin }, fCfg.build(v)));
+  $("fOk").disabled = false;
+  if (!d.ok) { $("fErr").textContent = d.error; return; }
+  setPin(v.pin); $("fDlg").close(); toast(fCfg.done(d)); load();
+};
 
-const fmt = n => Number(n).toLocaleString("id-ID", { maximumFractionDigits: 2 });
-const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
-
+/* ---------- Bahan ---------- */
 function renderBahan() {
   const ul = $("listB"); ul.textContent = "";
-  if (!bahan.length) { const li = el("li", "empty", "Belum ada data bahan."); li.style.display = "block"; ul.appendChild(li); return; }
+  if (!bahan.length) empty(ul, "Belum ada bahan. Tekan “+ Bahan baru”.");
   bahan.forEach(b => {
     const li = el("li"), info = el("div");
-    info.append(el("div", "nama", b.nama), el("div", "sub", b.kode + " · " + rp(b.harga) + " / " + b.satuan));
-    const st = el("div", "stok " + (b.stok <= 0 ? "out" : b.stok <= b.min ? "low" : ""), fmt(b.stok) + " " + b.satuan);
-    st.style.fontSize = ".95rem";
+    info.append(el("div", "nama", b.nama), el("div", "sub", b.kode + " · " + (b.jenis || "Bahan") + " · " + rp(b.harga) + " / " + b.satuan));
+    const st = el("div", "stok " + (b.stok <= 0 ? "out" : b.stok <= b.min ? "low" : ""), fmt(b.stok) + " " + b.satuan); st.style.fontSize = ".95rem";
     const bt = el("button", "btn", "Beli"); bt.onclick = () => openBeli(b);
     li.append(info, st, bt); ul.appendChild(li);
   });
 }
+function openBeli(b) {
+  ask({ title: "Beli " + b.nama, info: "Stok " + fmt(b.stok) + " " + b.satuan + " · harga rata-rata " + rp(b.harga) + " / " + b.satuan,
+    action: "beli", ok: "Catat pembelian",
+    fields: [{ k: "qty", label: "Jumlah dibeli (" + b.satuan + ")", type: "number" }, { k: "total", label: "Total harga belanja (Rp)", type: "number" }, { k: "supplier", label: "Supplier (opsional)" }],
+    build: v => ({ kode: b.kode, qty: +v.qty, total: +v.total, supplier: v.supplier }),
+    prev: v => +v.qty > 0 && +v.total > 0 ? "Harga per " + b.satuan + ": " + rp(v.total / v.qty) : "",
+    done: d => b.nama + " kini " + fmt(d.stok) + " " + b.satuan });
+}
+$("bBaru").onclick = () => ask({ title: "Bahan / barang baru", info: "Stok awal 0. Isi stok lewat tombol Beli.", action: "bahanBaru", ok: "Tambah",
+  fields: [{ k: "nama", label: "Nama" }, { k: "satuan", label: "Satuan", ph: "gram, ml, pcs, lembar…" }, { k: "jenis", label: "Jenis", ph: "Bahan baku / Kemasan / Barang" }, { k: "min", label: "Stok minimum (notifikasi)", type: "number" }],
+  build: v => ({ nama: v.nama, satuan: v.satuan, jenis: v.jenis, min: +v.min }), done: () => "Bahan ditambahkan" });
 
-function renderHpp() {
-  $("hSum").textContent = ovh.target
-    ? "Biaya tetap " + rp(ovh.total) + " per bulan ÷ target " + fmt(ovh.target) + " porsi = " + rp(ovh.perPorsi) + " per porsi (tenaga kerja, listrik, dll)."
-    : "Isi target porsi per bulan di sheet Biaya (sel E1) agar tenaga kerja dan listrik ikut dihitung.";
-  const ul = $("listH"); ul.textContent = "";
-  items.forEach(i => {
-    const li = el("li"), info = el("div");
-    info.append(el("div", "nama", i.nama), el("div", "sub", i.resep
-      ? "Bahan + kemasan " + rp(i.hppBahan) + " + tenaga/listrik " + rp(i.hpp - i.hppBahan)
-      : "Belum ada resep di sheet Resep"));
-    const right = el("div"); right.style.textAlign = "right";
-    const laba = i.harga - i.hpp, m = el("div", "sub", "Jual " + rp(i.harga) + " · margin " + (i.harga ? Math.round(laba / i.harga * 100) : 0) + "%");
-    if (laba < 0) m.style.color = "var(--bad)";
-    right.append(el("div", "nama", "HPP " + rp(i.hpp)), m);
-    li.style.gridTemplateColumns = "1fr auto"; li.append(info, right); ul.appendChild(li);
+/* ---------- Produksi ---------- */
+function fillProduk() {
+  const s = $("xProduk"), cur = s.value; s.textContent = "";
+  s.append(new Option("Pilih produk…", ""));
+  items.forEach(i => s.append(new Option(i.nama, i.kode)));
+  s.value = cur;
+}
+function renderPakai() {
+  const box = $("xPakai"); box.textContent = "";
+  pk.forEach((r, idx) => {
+    const row = el("div", "pk"), sel = el("select"), q = el("input"), del = el("button", "btn ghost", "×");
+    sel.setAttribute("aria-label", "Bahan"); sel.append(new Option("Pilih bahan…", ""));
+    bahan.forEach(b => sel.append(new Option(b.nama + " (stok " + fmt(b.stok) + " " + b.satuan + ")", b.kode)));
+    sel.value = r.kode;
+    const unit = () => { const b = bahan.find(x => x.kode === r.kode); q.placeholder = b ? b.satuan : "jumlah"; };
+    sel.onchange = () => { r.kode = sel.value; unit(); calc(); };
+    q.type = "number"; q.step = "any"; q.min = "0"; q.inputMode = "decimal"; q.value = r.qty; q.setAttribute("aria-label", "Jumlah dipakai");
+    q.oninput = () => { r.qty = q.value; calc(); }; unit();
+    del.type = "button"; del.setAttribute("aria-label", "Hapus baris");
+    del.onclick = () => { pk.splice(idx, 1); if (!pk.length) pk.push({ kode: "", qty: "" }); renderPakai(); calc(); };
+    row.append(sel, q, del); box.appendChild(row);
   });
 }
+function calc() {
+  const hasil = parseFloat($("xHasil").value) || 0;
+  let bb = 0; pk.forEach(r => { const b = bahan.find(x => x.kode === r.kode); if (b) bb += (parseFloat(r.qty) || 0) * b.harga; });
+  const lain = ["xTk", "xListrik", "xLain"].reduce((t, i) => t + (parseFloat($(i).value) || 0), 0), tot = bb + lain;
+  const p = find($("xProduk").value);
+  let t = "Biaya bahan " + rp(bb) + " + biaya lain " + rp(lain) + " = " + rp(tot);
+  if (hasil > 0) {
+    const h = tot / hasil; t += "\nHPP per unit: " + rp(h);
+    if (p && p.harga > 0) { const l = p.harga - h; t += "\nHarga jual " + rp(p.harga) + " → laba per unit " + rp(l) + " (" + pct(l, p.harga) + "), estimasi laba batch " + rp(l * hasil); }
+    else if (p) t += "\nHarga jual belum diisi (atur di tab Produk & HPP).";
+  }
+  $("xPrev").textContent = t;
+}
+["xHasil", "xTk", "xListrik", "xLain"].forEach(i => $(i).oninput = calc);
+$("xProduk").onchange = calc;
+$("xTambah").onclick = () => { pk.push({ kode: "", qty: "" }); renderPakai(); };
+$("xOk").onclick = async () => {
+  const hasil = parseFloat($("xHasil").value), pin = $("xPin").value, pakai = pk.filter(r => r.kode && parseFloat(r.qty) > 0).map(r => ({ kode: r.kode, qty: parseFloat(r.qty) }));
+  const e = m => { $("xErr").textContent = m; };
+  if (!$("xProduk").value) return e("Pilih produk yang dihasilkan.");
+  if (!(hasil > 0)) return e("Isi total hasil produksi.");
+  if (!pakai.length) return e("Isi minimal satu bahan yang dipakai beserta jumlahnya.");
+  if (!pin) return e("Isi PIN kasir."); e("");
+  $("xOk").disabled = true; $("xOk").textContent = "Menyimpan…";
+  const d = await post({ action: "produksi", kode: $("xProduk").value, hasil, pakai, pin,
+    tk: +$("xTk").value || 0, listrik: +$("xListrik").value || 0, lain: +$("xLain").value || 0 });
+  $("xOk").disabled = false; $("xOk").textContent = "Simpan produksi";
+  if (!d.ok) return e(d.error);
+  setPin(pin); toast("Produksi tercatat. HPP per unit " + rp(d.hppBatch) + " · stok kini " + fmt(d.stok));
+  pk = [{ kode: "", qty: "" }]; ["xHasil", "xTk", "xListrik", "xLain"].forEach(i => $(i).value = ""); renderPakai(); calc(); load();
+};
 
+/* ---------- Produk & HPP ---------- */
+function renderProduk() {
+  if (lap) $("pSum").textContent =
+    "Hari ini  · omzet " + rp(lap.hari.omzet) + " · HPP " + rp(lap.hari.hpp) + " · laba " + rp(lap.hari.laba) +
+    "\nBulan ini · omzet " + rp(lap.bulan.omzet) + " · HPP " + rp(lap.bulan.hpp) + " · laba " + rp(lap.bulan.laba);
+  const ul = $("listP"); ul.textContent = "";
+  if (!items.length) empty(ul, "Belum ada produk. Tekan “+ Produk baru”.");
+  items.forEach(i => {
+    const li = el("li"), info = el("div"), right = el("div");
+    info.append(el("div", "nama", i.nama), el("div", "sub", i.kode + " · stok " + fmt(i.stok)));
+    right.style.textAlign = "right";
+    if (!i.hpp) right.append(el("div", "nama", "HPP –"), el("div", "sub", "Belum ada produksi"));
+    else {
+      const l = i.harga - i.hpp, m = el("div", "sub", i.harga ? "Jual " + rp(i.harga) + " · laba " + rp(l) + " (" + pct(l, i.harga) + ")" : "Harga jual belum diisi");
+      if (i.harga && l < 0) m.style.color = "var(--bad)";
+      right.append(el("div", "nama", "HPP " + rp(i.hpp)), m);
+    }
+    const bt = el("button", "btn ghost", "Harga"); bt.onclick = () => openHarga(i);
+    li.append(info, right, bt); ul.appendChild(li);
+  });
+}
+function openHarga(i) {
+  ask({ title: "Harga jual " + i.nama, info: i.hpp ? "HPP saat ini " + rp(i.hpp) + " per unit" : "Belum ada produksi, HPP belum tersedia",
+    action: "harga", fields: [{ k: "harga", label: "Harga jual (Rp)", type: "number", val: i.harga || "" }],
+    build: v => ({ kode: i.kode, harga: +v.harga }),
+    prev: v => +v.harga > 0 && i.hpp ? "Laba per unit " + rp(v.harga - i.hpp) + " (" + pct(v.harga - i.hpp, +v.harga) + ")" : "",
+    done: () => "Harga jual diperbarui" });
+}
+$("pBaru").onclick = () => ask({ title: "Produk baru", info: "Stok dan HPP terisi setelah Anda mencatat produksi.", action: "produkBaru", ok: "Tambah",
+  fields: [{ k: "nama", label: "Nama produk" }, { k: "harga", label: "Harga jual (Rp, boleh diisi nanti)", type: "number" }, { k: "min", label: "Stok minimum (notifikasi)", type: "number" }],
+  build: v => ({ nama: v.nama, harga: +v.harga, min: +v.min }), done: () => "Produk ditambahkan" });
+
+/* ---------- Tab & muat data ---------- */
 $("tabs").onclick = e => {
   const b = e.target.closest(".chip"); if (!b) return;
   tab = b.dataset.t;
   document.querySelectorAll("#tabs .chip").forEach(c => c.setAttribute("aria-pressed", c === b));
-  ["Kasir", "Bahan", "Hpp"].forEach(t => $("p" + t).hidden = t !== tab);
+  ["Kasir", "Bahan", "Prod", "Produk"].forEach(t => $("p" + t).hidden = t !== tab);
   renderBar();
 };
 
-function updBeli() {
-  const q = parseFloat($("bQty").value), t = parseFloat($("bTotal").value);
-  $("bUnit").textContent = q > 0 && t > 0 ? "Harga per " + bCur.satuan + ": " + rp(t / q) : "";
-}
-function openBeli(b) {
-  bCur = b;
-  $("bNama").textContent = b.nama;
-  $("bInfo").textContent = "Stok " + fmt(b.stok) + " " + b.satuan + " · harga rata-rata " + rp(b.harga) + " / " + b.satuan;
-  $("bQty").value = ""; $("bQty").placeholder = "dalam " + b.satuan; $("bTotal").value = ""; $("bSup").value = "";
-  try { $("bPin").value = localStorage.getItem("pin") || ""; } catch (e) {}
-  $("bErr").textContent = ""; updBeli();
-  $("bDlg").showModal(); $("bQty").focus();
-}
-$("bQty").oninput = updBeli; $("bTotal").oninput = updBeli;
-$("bBatal").onclick = () => $("bDlg").close();
-$("bOk").onclick = async () => {
-  const qty = parseFloat($("bQty").value), total = parseFloat($("bTotal").value), pin = $("bPin").value;
-  if (!(qty > 0) || !(total > 0)) { $("bErr").textContent = "Isi jumlah dan total harga."; return; }
-  if (!pin) { $("bErr").textContent = "Isi PIN kasir."; return; }
-  $("bOk").disabled = true; $("bOk").textContent = "Menyimpan…";
+async function load() {
   try {
-    const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({ action: "beli", kode: bCur.kode, qty, total, supplier: $("bSup").value.trim(), pin }) });
-    const d = await r.json();
-    if (!d.ok) { $("bErr").textContent = d.error; return; }
-    try { localStorage.setItem("pin", pin); } catch (e) {}
-    $("bDlg").close();
-    toast(bCur.nama + " bertambah. Stok kini " + fmt(d.stok) + " " + bCur.satuan);
-    await load();
+    const r = await fetch(API_URL, { cache: "no-store" }), d = await r.json();
+    if (!d.ok) throw new Error();
+    items = d.items; bahan = d.bahan; lap = d.lap;
+    Object.keys(cart).forEach(k => { const it = find(k); if (!it || it.stok <= 0) delete cart[k]; else if (cart[k] > it.stok) cart[k] = it.stok; });
+    $("dot").classList.remove("off"); $("status").textContent = "Diperbarui " + new Date().toLocaleTimeString("id-ID");
+    render(); renderBahan(); renderProduk();
+    // form produksi hanya dibangun ulang jika daftar produk/bahan berubah, agar ketikan tidak hilang
+    const sb = bahan.map(b => b.kode).join(), sp = items.map(i => i.kode).join();
+    if (sb !== sigB) { sigB = sb; renderPakai(); }
+    if (sp !== sigP) { sigP = sp; fillProduk(); }
+    calc();
+    if ($("dlg").open) renderLines();
   } catch (e) {
-    $("bErr").textContent = "Koneksi gagal. Coba lagi.";
-  } finally {
-    $("bOk").disabled = false; $("bOk").textContent = "Catat pembelian";
+    $("dot").classList.add("off"); $("status").textContent = "Gagal memuat, mencoba lagi…";
   }
-};
-
-$("q").oninput = render;
-$("chips").onclick = e => {
-  const b = e.target.closest(".chip"); if (!b) return;
-  filter = b.dataset.f;
-  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === b));
-  render();
-};
-
-load();
-setInterval(load, REFRESH_MS);
+}
+$("xPin").value = getPin(); renderPakai(); calc();
+load(); setInterval(load, REFRESH_MS);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
 </script>
 </body>
