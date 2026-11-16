@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stok Kasir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f2f5f7; --surface: #ffffff; --ink: #13212c; --muted: #5d6c78; --line: #dbe2e8;
+    --accent: #0b6e8f; --accent-ink: #ffffff;
+    --ok: #17794a; --warn: #a8480a; --bad: #b42318;
+    --warn-bg: #fdf0e3; --bad-bg: #fde8e6; --ok-bg: #e5f4ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1a22; --surface: #16242f; --ink: #e8eef2; --muted: #93a4b1; --line: #26384a;
+      --accent: #4cb4d6; --accent-ink: #08202b;
+      --ok: #5fd39a; --warn: #f0a566; --bad: #ff8b80;
+      --warn-bg: #3a2a1a; --bad-bg: #3d1f1d; --ok-bg: #173226;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.45 "Plus Jakarta Sans", system-ui, sans-serif; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0 14px; }
+  h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; }
+  .live { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--muted); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); }
+  .dot.off { background: var(--bad); }
+  input[type=search], input[type=number], input[type=password], input[type=text] {
+    width: 100%; padding: 12px 14px; font: inherit; color: var(--ink); background: var(--surface);
+    border: 1.5px solid var(--line); border-radius: 10px;
+  }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .chips { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+  .chip { padding: 8px 14px; font: 500 .9rem inherit; font-family: inherit; color: var(--ink); background: var(--surface); border: 1.5px solid var(--line); border-radius: 999px; cursor: pointer; }
+  .chip[aria-pressed=true] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  ul { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; overflow: hidden; }
+  li { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  li:last-child { border-bottom: 0; }
+  .nama { font-weight: 700; }
+  .sub { font-size: .85rem; color: var(--muted); }
+  .stok { min-width: 64px; text-align: center; padding: 6px 10px; border-radius: 10px; font-weight: 800; font-size: 1.25rem; font-variant-numeric: tabular-nums; background: var(--ok-bg); color: var(--ok); }
+  .stok.low { background: var(--warn-bg); color: var(--warn); }
+  .stok.out { background: var(--bad-bg); color: var(--bad); }
+  .btn { padding: 10px 16px; font: 700 .95rem inherit; font-family: inherit; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .empty { padding: 28px 16px; text-align: center; color: var(--muted); }
+  dialog { width: min(92vw, 380px); padding: 20px; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog h2 { margin: 0 0 4px; font-size: 1.15rem; }
+  label { display: block; margin: 14px 0 6px; font-size: .85rem; font-weight: 500; color: var(--muted); }
+  .total { margin-top: 12px; font-weight: 700; }
+  .err { min-height: 1.3em; margin-top: 10px; color: var(--bad); font-size: .9rem; }
+  .row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  #toast.show { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Stok barang</h1>
+    <div class="live" role="status"><span class="dot" id="dot"></span><span id="status">Memuat…</span></div>
+  </header>
+
+  <input type="search" id="q" placeholder="Cari nama atau kode barang" aria-label="Cari barang" autocomplete="off">
+  <div class="chips" id="chips">
+    <button class="chip" data-f="all" aria-pressed="true">Semua</button>
+    <button class="chip" data-f="low" aria-pressed="false">Menipis</button>
+    <button class="chip" data-f="out" aria-pressed="false">Habis</button>
+  </div>
+
+  <ul id="list" aria-live="polite"></ul>
+</div>
+
+<dialog id="dlg">
+  <h2 id="dNama"></h2>
+  <div class="sub" id="dInfo"></div>
+  <label for="dBeli">Nama pembeli</label>
+  <input type="text" id="dBeli" maxlength="60" placeholder="Kosongkan jika umum" autocomplete="off">
+  <label for="dQty">Jumlah terjual</label>
+  <input type="number" id="dQty" min="1" value="1" inputmode="numeric">
+  <label for="dPin">PIN kasir</label>
+  <input type="password" id="dPin" inputmode="numeric" autocomplete="off">
+  <div class="total" id="dTotal"></div>
+  <div class="err" id="dErr" role="alert"></div>
+  <div class="row">
+    <button class="btn ghost" id="dBatal" type="button">Batal</button>
+    <button class="btn" id="dOk" type="button">Catat penjualan</button>
+  </div>
+</dialog>
+<div id="toast" role="status"></div>
+
+<script>
+// GANTI dengan URL Web App dari Apps Script (berakhiran /exec)
+const API_URL = "GANTI_DENGAN_URL_WEB_APP";
+const REFRESH_MS = 10000;
+
+let items = [], filter = "all", current = null;
+const $ = id => document.getElementById(id);
+const rp = n => "Rp" + Number(n).toLocaleString("id-ID");
+
+function kelas(i) { return i.stok <= 0 ? "out" : i.stok <= i.min ? "low" : ""; }
+
+function render() {
+  const q = $("q").value.trim().toLowerCase();
+  const rows = items.filter(i =>
+    (!q || i.nama.toLowerCase().includes(q) || i.kode.toLowerCase().includes(q)) &&
+    (filter === "all" || (filter === "out" ? i.stok <= 0 : i.stok <= i.min))
+  );
+  const ul = $("list");
+  ul.textContent = "";
+  if (!rows.length) {
+    const li = document.createElement("li");
+    li.className = "empty";
+    li.style.display = "block";
+    li.textContent = items.length ? "Tidak ada barang yang cocok." : "Belum ada data stok.";
+    ul.appendChild(li);
+    return;
+  }
+  rows.forEach(i => {
+    const li = document.createElement("li");
+    const info = document.createElement("div");
+    const n = document.createElement("div"); n.className = "nama"; n.textContent = i.nama;
+    const s = document.createElement("div"); s.className = "sub"; s.textContent = i.kode + " · " + rp(i.harga);
+    info.append(n, s);
+    const st = document.createElement("div"); st.className = "stok " + kelas(i); st.textContent = i.stok;
+    st.title = "Stok minimum: " + i.min;
+    const b = document.createElement("button"); b.className = "btn"; b.textContent = "Jual"; b.disabled = i.stok <= 0;
+    b.onclick = () => openDialog(i);
+    li.append(info, st, b);
+    ul.appendChild(li);
+  });
+}
+
+async function load() {
+  try {
+    const r = await fetch(API_URL, { cache: "no-store" });
+    const d = await r.json();
+    if (!d.ok) throw new Error();
+    items = d.items;
+    $("dot").classList.remove("off");
+    $("status").textContent = "Diperbarui " + new Date().toLocaleTimeString("id-ID");
+    if (!$("dlg").open) render();
+  } catch (e) {
+    $("dot").classList.add("off");
+    $("status").textContent = "Gagal memuat, mencoba lagi…";
+  }
+}
+
+function openDialog(i) {
+  current = i;
+  $("dNama").textContent = i.nama;
+  $("dInfo").textContent = "Stok " + i.stok + " · " + rp(i.harga);
+  $("dBeli").value = "";
+  $("dQty").value = 1; $("dQty").max = i.stok;
+  try { $("dPin").value = localStorage.getItem("pin") || ""; } catch (e) {}
+  $("dErr").textContent = "";
+  updTotal();
+  $("dlg").showModal();
+  $("dBeli").focus();
+}
+function updTotal() { $("dTotal").textContent = "Total " + rp((parseInt($("dQty").value, 10) || 0) * current.harga); }
+$("dQty").oninput = updTotal;
+$("dBatal").onclick = () => { $("dlg").close(); render(); };
+
+$("dOk").onclick = async () => {
+  const qty = parseInt($("dQty").value, 10), pin = $("dPin").value;
+  if (!qty || qty < 1) { $("dErr").textContent = "Isi jumlah minimal 1."; return; }
+  if (!pin) { $("dErr").textContent = "Isi PIN kasir."; return; }
+  $("dOk").disabled = true; $("dOk").textContent = "Menyimpan…";
+  try {
+    // text/plain agar tidak memicu preflight CORS di Apps Script
+    const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action: "jual", kode: current.kode, qty, pin, pembeli: $("dBeli").value.trim() }) });
+    const d = await r.json();
+    if (!d.ok) { $("dErr").textContent = d.error; return; }
+    try { localStorage.setItem("pin", pin); } catch (e) {}
+    $("dlg").close();
+    toast("Tercatat. Sisa " + current.nama + ": " + d.sisa);
+    await load(); render();
+  } catch (e) {
+    $("dErr").textContent = "Koneksi gagal. Coba lagi.";
+  } finally {
+    $("dOk").disabled = false; $("dOk").textContent = "Catat penjualan";
+  }
+};
+
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 3000); }
+
+$("q").oninput = render;
+$("chips").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  filter = b.dataset.f;
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === b));
+  render();
+};
+
+load();
+setInterval(load, REFRESH_MS);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+</script>
+</body>
+</html>
