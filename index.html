@@ -306,11 +306,15 @@ function renderBahan() {
   });
 }
 function openBeli(b) {
-  ask({ title: "Beli " + b.nama, info: "Stok " + fmt(b.stok) + " " + b.satuan + " · harga rata-rata " + rp(b.harga) + " / " + b.satuan,
+  ask({ title: "Beli " + b.nama, info: "Stok " + fmt(b.stok) + " " + b.satuan + " · harga rata-rata " + rp(b.harga) + " / " + b.satuan + ". Isi harga per " + b.satuan + " ATAU total belanja.",
     action: "beli", ok: "Catat pembelian",
-    fields: [{ k: "qty", label: "Jumlah dibeli (" + b.satuan + ")", type: "number" }, { k: "total", label: "Total harga belanja (Rp)", type: "number" }, { k: "supplier", label: "Supplier (opsional)" }],
-    build: v => ({ kode: b.kode, qty: +v.qty, total: +v.total, supplier: v.supplier }),
-    prev: v => +v.qty > 0 && +v.total > 0 ? "Harga per " + b.satuan + ": " + rp(v.total / v.qty) : "",
+    fields: [{ k: "qty", label: "Jumlah dibeli (" + b.satuan + ")", type: "number" },
+      { k: "harga", label: "Harga per " + b.satuan + " (Rp)", type: "number" },
+      { k: "total", label: "Atau total harga belanja (Rp)", type: "number" },
+      { k: "supplier", label: "Supplier (opsional)" }],
+    build: v => ({ kode: b.kode, qty: +v.qty, total: +v.total || (+v.qty * +v.harga), supplier: v.supplier }),
+    prev: v => !(+v.qty > 0) ? "" : +v.total > 0 ? "Harga per " + b.satuan + ": " + rp(v.total / v.qty)
+      : +v.harga > 0 ? "Total belanja: " + rp(v.qty * v.harga) : "",
     done: d => b.nama + " kini " + fmt(d.stok) + " " + b.satuan });
 }
 $("bBaru").onclick = () => ask({ title: "Bahan / barang baru", info: "Stok awal 0. Isi stok lewat tombol Beli.", action: "bahanBaru", ok: "Tambah",
