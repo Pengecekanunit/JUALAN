@@ -68,6 +68,10 @@
   .step { display: flex; align-items: center; gap: 6px; }
   .step button { width: 34px; height: 34px; font: 700 1.1rem inherit; font-family: inherit; color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 8px; cursor: pointer; }
   .step span { min-width: 26px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .tabs { margin-top: 0; }
+  .sum { margin: 0 0 12px; padding: 12px 14px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; font-size: .9rem; color: var(--muted); }
+  .hint { margin: 8px 0 0; font-size: .85rem; color: var(--muted); }
+  section[hidden] { display: none; }
   #toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
   #toast.show { opacity: 1; }
   @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
@@ -80,6 +84,13 @@
     <div class="live" role="status"><span class="dot" id="dot"></span><span id="status">Memuat…</span></div>
   </header>
 
+  <div class="chips tabs" id="tabs">
+    <button class="chip" data-t="Kasir" aria-pressed="true">Kasir</button>
+    <button class="chip" data-t="Bahan" aria-pressed="false">Bahan baku</button>
+    <button class="chip" data-t="Hpp" aria-pressed="false">HPP</button>
+  </div>
+
+  <section id="pKasir">
   <input type="search" id="q" placeholder="Cari nama atau kode barang" aria-label="Cari barang" autocomplete="off">
   <div class="chips" id="chips">
     <button class="chip" data-f="all" aria-pressed="true">Semua</button>
@@ -88,6 +99,18 @@
   </div>
 
   <ul id="list" aria-live="polite"></ul>
+    <p class="hint">Angka di kanan = porsi yang masih bisa dibuat dari stok bahan.</p>
+  </section>
+
+  <section id="pBahan" hidden>
+    <p class="hint" style="margin:0 0 10px">Catat belanja bahan, kemasan, dan stiker di sini. Stok dan harga rata-rata ikut diperbarui.</p>
+    <ul id="listB"></ul>
+  </section>
+
+  <section id="pHpp" hidden>
+    <div class="sum" id="hSum"></div>
+    <ul id="listH"></ul>
+  </section>
 </div>
 
 <div class="cartbar" id="cartbar" hidden>
@@ -111,6 +134,24 @@
     <button class="btn" id="dOk" type="button">Catat penjualan</button>
   </div>
 </dialog>
+<dialog id="bDlg">
+  <h2 id="bNama"></h2>
+  <div class="sub" id="bInfo"></div>
+  <label for="bQty">Jumlah dibeli</label>
+  <input type="number" id="bQty" min="0" step="any" inputmode="decimal">
+  <label for="bTotal">Total harga belanja (Rp)</label>
+  <input type="number" id="bTotal" min="0" step="any" inputmode="numeric">
+  <div class="total" id="bUnit"></div>
+  <label for="bSup">Supplier (opsional)</label>
+  <input type="text" id="bSup" maxlength="60" autocomplete="off">
+  <label for="bPin">PIN kasir</label>
+  <input type="password" id="bPin" inputmode="numeric" autocomplete="off">
+  <div class="err" id="bErr" role="alert"></div>
+  <div class="row">
+    <button class="btn ghost" id="bBatal" type="button">Batal</button>
+    <button class="btn" id="bOk" type="button">Catat pembelian</button>
+  </div>
+</dialog>
 <div id="toast" role="status"></div>
 
 <script>
@@ -118,7 +159,7 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbz9tY6-MnrtDzbvQjb659l4rxhjRYoWtOIf_x048cxfSSPf3TMsGJz9PgxMAfxYCfYB4w/exec";
 const REFRESH_MS = 10000;
 
-let items = [], filter = "all";
+let items = [], bahan = [], ovh = { total: 0, target: 0, perPorsi: 0 }, filter = "all", tab = "Kasir", bCur = null;
 const cart = {}; // kode -> jumlah
 const $ = id => document.getElementById(id);
 const rp = n => "Rp" + Number(n).toLocaleString("id-ID");
@@ -163,7 +204,7 @@ function render() {
 
 function renderBar() {
   const c = cartCount();
-  $("cartbar").hidden = c === 0;
+  $("cartbar").hidden = c === 0 || tab !== "Kasir";
   $("cCount").textContent = c + " barang";
   $("cBar").textContent = rp(cartTotal());
 }
@@ -206,7 +247,7 @@ async function load() {
     const r = await fetch(API_URL, { cache: "no-store" });
     const d = await r.json();
     if (!d.ok) throw new Error();
-    items = d.items;
+    items = d.items; bahan = d.bahan; ovh = d.overhead;
     // sesuaikan keranjang dengan stok terbaru
     Object.keys(cart).forEach(k => {
       const it = find(k);
@@ -215,7 +256,7 @@ async function load() {
     });
     $("dot").classList.remove("off");
     $("status").textContent = "Diperbarui " + new Date().toLocaleTimeString("id-ID");
-    render();
+    render(); renderBahan(); renderHpp();
     if ($("dlg").open) renderLines();
   } catch (e) {
     $("dot").classList.add("off");
@@ -258,6 +299,84 @@ $("dOk").onclick = async () => {
 };
 
 function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 3000); }
+
+const fmt = n => Number(n).toLocaleString("id-ID", { maximumFractionDigits: 2 });
+const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
+
+function renderBahan() {
+  const ul = $("listB"); ul.textContent = "";
+  if (!bahan.length) { const li = el("li", "empty", "Belum ada data bahan."); li.style.display = "block"; ul.appendChild(li); return; }
+  bahan.forEach(b => {
+    const li = el("li"), info = el("div");
+    info.append(el("div", "nama", b.nama), el("div", "sub", b.kode + " · " + rp(b.harga) + " / " + b.satuan));
+    const st = el("div", "stok " + (b.stok <= 0 ? "out" : b.stok <= b.min ? "low" : ""), fmt(b.stok) + " " + b.satuan);
+    st.style.fontSize = ".95rem";
+    const bt = el("button", "btn", "Beli"); bt.onclick = () => openBeli(b);
+    li.append(info, st, bt); ul.appendChild(li);
+  });
+}
+
+function renderHpp() {
+  $("hSum").textContent = ovh.target
+    ? "Biaya tetap " + rp(ovh.total) + " per bulan ÷ target " + fmt(ovh.target) + " porsi = " + rp(ovh.perPorsi) + " per porsi (tenaga kerja, listrik, dll)."
+    : "Isi target porsi per bulan di sheet Biaya (sel E1) agar tenaga kerja dan listrik ikut dihitung.";
+  const ul = $("listH"); ul.textContent = "";
+  items.forEach(i => {
+    const li = el("li"), info = el("div");
+    info.append(el("div", "nama", i.nama), el("div", "sub", i.resep
+      ? "Bahan + kemasan " + rp(i.hppBahan) + " + tenaga/listrik " + rp(i.hpp - i.hppBahan)
+      : "Belum ada resep di sheet Resep"));
+    const right = el("div"); right.style.textAlign = "right";
+    const laba = i.harga - i.hpp, m = el("div", "sub", "Jual " + rp(i.harga) + " · margin " + (i.harga ? Math.round(laba / i.harga * 100) : 0) + "%");
+    if (laba < 0) m.style.color = "var(--bad)";
+    right.append(el("div", "nama", "HPP " + rp(i.hpp)), m);
+    li.style.gridTemplateColumns = "1fr auto"; li.append(info, right); ul.appendChild(li);
+  });
+}
+
+$("tabs").onclick = e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  tab = b.dataset.t;
+  document.querySelectorAll("#tabs .chip").forEach(c => c.setAttribute("aria-pressed", c === b));
+  ["Kasir", "Bahan", "Hpp"].forEach(t => $("p" + t).hidden = t !== tab);
+  renderBar();
+};
+
+function updBeli() {
+  const q = parseFloat($("bQty").value), t = parseFloat($("bTotal").value);
+  $("bUnit").textContent = q > 0 && t > 0 ? "Harga per " + bCur.satuan + ": " + rp(t / q) : "";
+}
+function openBeli(b) {
+  bCur = b;
+  $("bNama").textContent = b.nama;
+  $("bInfo").textContent = "Stok " + fmt(b.stok) + " " + b.satuan + " · harga rata-rata " + rp(b.harga) + " / " + b.satuan;
+  $("bQty").value = ""; $("bQty").placeholder = "dalam " + b.satuan; $("bTotal").value = ""; $("bSup").value = "";
+  try { $("bPin").value = localStorage.getItem("pin") || ""; } catch (e) {}
+  $("bErr").textContent = ""; updBeli();
+  $("bDlg").showModal(); $("bQty").focus();
+}
+$("bQty").oninput = updBeli; $("bTotal").oninput = updBeli;
+$("bBatal").onclick = () => $("bDlg").close();
+$("bOk").onclick = async () => {
+  const qty = parseFloat($("bQty").value), total = parseFloat($("bTotal").value), pin = $("bPin").value;
+  if (!(qty > 0) || !(total > 0)) { $("bErr").textContent = "Isi jumlah dan total harga."; return; }
+  if (!pin) { $("bErr").textContent = "Isi PIN kasir."; return; }
+  $("bOk").disabled = true; $("bOk").textContent = "Menyimpan…";
+  try {
+    const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action: "beli", kode: bCur.kode, qty, total, supplier: $("bSup").value.trim(), pin }) });
+    const d = await r.json();
+    if (!d.ok) { $("bErr").textContent = d.error; return; }
+    try { localStorage.setItem("pin", pin); } catch (e) {}
+    $("bDlg").close();
+    toast(bCur.nama + " bertambah. Stok kini " + fmt(d.stok) + " " + bCur.satuan);
+    await load();
+  } catch (e) {
+    $("bErr").textContent = "Koneksi gagal. Coba lagi.";
+  } finally {
+    $("bOk").disabled = false; $("bOk").textContent = "Catat pembelian";
+  }
+};
 
 $("q").oninput = render;
 $("chips").onclick = e => {
