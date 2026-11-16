@@ -57,7 +57,18 @@
   .total { margin-top: 12px; font-weight: 700; }
   .err { min-height: 1.3em; margin-top: 10px; color: var(--bad); font-size: .9rem; }
   .row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
-  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .wrap { padding-bottom: 96px; }
+  .cartbar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1.5px solid var(--line); }
+  .cartbar[hidden] { display: none; }
+  .cartbar .in { max-width: 760px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .cartbar b { font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+  .lines { margin: 12px 0 0; max-height: 40vh; overflow: auto; border: 1.5px solid var(--line); border-radius: 12px; }
+  .line { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .line:last-child { border-bottom: 0; }
+  .step { display: flex; align-items: center; gap: 6px; }
+  .step button { width: 34px; height: 34px; font: 700 1.1rem inherit; font-family: inherit; color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 8px; cursor: pointer; }
+  .step span { min-width: 26px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  #toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
   #toast.show { opacity: 1; }
   @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
 </style>
@@ -79,19 +90,24 @@
   <ul id="list" aria-live="polite"></ul>
 </div>
 
+<div class="cartbar" id="cartbar" hidden>
+  <div class="in">
+    <div><div class="sub" id="cCount"></div><b id="cBar"></b></div>
+    <button class="btn" id="cOpen" type="button">Lihat keranjang</button>
+  </div>
+</div>
+
 <dialog id="dlg">
-  <h2 id="dNama"></h2>
-  <div class="sub" id="dInfo"></div>
+  <h2>Keranjang</h2>
   <label for="dBeli">Nama pembeli</label>
   <input type="text" id="dBeli" maxlength="60" placeholder="Kosongkan jika umum" autocomplete="off">
-  <label for="dQty">Jumlah terjual</label>
-  <input type="number" id="dQty" min="1" value="1" inputmode="numeric">
+  <div class="lines" id="lines"></div>
   <label for="dPin">PIN kasir</label>
   <input type="password" id="dPin" inputmode="numeric" autocomplete="off">
   <div class="total" id="dTotal"></div>
   <div class="err" id="dErr" role="alert"></div>
   <div class="row">
-    <button class="btn ghost" id="dBatal" type="button">Batal</button>
+    <button class="btn ghost" id="dBatal" type="button">Tutup</button>
     <button class="btn" id="dOk" type="button">Catat penjualan</button>
   </div>
 </dialog>
@@ -102,11 +118,15 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbz9tY6-MnrtDzbvQjb659l4rxhjRYoWtOIf_x048cxfSSPf3TMsGJz9PgxMAfxYCfYB4w/exec";
 const REFRESH_MS = 10000;
 
-let items = [], filter = "all", current = null;
+let items = [], filter = "all";
+const cart = {}; // kode -> jumlah
 const $ = id => document.getElementById(id);
 const rp = n => "Rp" + Number(n).toLocaleString("id-ID");
+const find = k => items.find(i => i.kode === k);
 
 function kelas(i) { return i.stok <= 0 ? "out" : i.stok <= i.min ? "low" : ""; }
+function cartTotal() { return Object.keys(cart).reduce((t, k) => t + (find(k) ? find(k).harga * cart[k] : 0), 0); }
+function cartCount() { return Object.keys(cart).reduce((t, k) => t + cart[k], 0); }
 
 function render() {
   const q = $("q").value.trim().toLowerCase();
@@ -122,7 +142,6 @@ function render() {
     li.style.display = "block";
     li.textContent = items.length ? "Tidak ada barang yang cocok." : "Belum ada data stok.";
     ul.appendChild(li);
-    return;
   }
   rows.forEach(i => {
     const li = document.createElement("li");
@@ -132,11 +151,54 @@ function render() {
     info.append(n, s);
     const st = document.createElement("div"); st.className = "stok " + kelas(i); st.textContent = i.stok;
     st.title = "Stok minimum: " + i.min;
-    const b = document.createElement("button"); b.className = "btn"; b.textContent = "Jual"; b.disabled = i.stok <= 0;
-    b.onclick = () => openDialog(i);
+    const b = document.createElement("button"); b.className = "btn";
+    b.textContent = cart[i.kode] ? "Tambah (" + cart[i.kode] + ")" : "Tambah";
+    b.disabled = i.stok <= 0 || (cart[i.kode] || 0) >= i.stok;
+    b.onclick = () => { cart[i.kode] = (cart[i.kode] || 0) + 1; render(); };
     li.append(info, st, b);
     ul.appendChild(li);
   });
+  renderBar();
+}
+
+function renderBar() {
+  const c = cartCount();
+  $("cartbar").hidden = c === 0;
+  $("cCount").textContent = c + " barang";
+  $("cBar").textContent = rp(cartTotal());
+}
+
+function renderLines() {
+  const box = $("lines");
+  box.textContent = "";
+  const ks = Object.keys(cart);
+  if (!ks.length) { box.className = "lines empty"; box.textContent = "Keranjang kosong."; }
+  else box.className = "lines";
+  ks.forEach(k => {
+    const it = find(k); if (!it) return;
+    const row = document.createElement("div"); row.className = "line";
+    const info = document.createElement("div");
+    const n = document.createElement("div"); n.className = "nama"; n.textContent = it.nama;
+    const s = document.createElement("div"); s.className = "sub"; s.textContent = rp(it.harga) + " × " + cart[k] + " = " + rp(it.harga * cart[k]);
+    info.append(n, s);
+    const step = document.createElement("div"); step.className = "step";
+    const minus = document.createElement("button"); minus.type = "button"; minus.textContent = "−"; minus.setAttribute("aria-label", "Kurangi " + it.nama);
+    const num = document.createElement("span"); num.textContent = cart[k];
+    const plus = document.createElement("button"); plus.type = "button"; plus.textContent = "+"; plus.setAttribute("aria-label", "Tambah " + it.nama);
+    plus.disabled = cart[k] >= it.stok;
+    minus.onclick = () => { cart[k]--; if (cart[k] <= 0) delete cart[k]; refreshDialog(); };
+    plus.onclick = () => { if (cart[k] < it.stok) cart[k]++; refreshDialog(); };
+    step.append(minus, num, plus);
+    row.append(info, step);
+    box.appendChild(row);
+  });
+  $("dTotal").textContent = "Total " + rp(cartTotal());
+  $("dOk").disabled = ks.length === 0;
+}
+
+function refreshDialog() {
+  renderLines(); render();
+  if (!cartCount()) $("dlg").close();
 }
 
 async function load() {
@@ -145,46 +207,49 @@ async function load() {
     const d = await r.json();
     if (!d.ok) throw new Error();
     items = d.items;
+    // sesuaikan keranjang dengan stok terbaru
+    Object.keys(cart).forEach(k => {
+      const it = find(k);
+      if (!it || it.stok <= 0) delete cart[k];
+      else if (cart[k] > it.stok) cart[k] = it.stok;
+    });
     $("dot").classList.remove("off");
     $("status").textContent = "Diperbarui " + new Date().toLocaleTimeString("id-ID");
-    if (!$("dlg").open) render();
+    render();
+    if ($("dlg").open) renderLines();
   } catch (e) {
     $("dot").classList.add("off");
     $("status").textContent = "Gagal memuat, mencoba lagi…";
   }
 }
 
-function openDialog(i) {
-  current = i;
-  $("dNama").textContent = i.nama;
-  $("dInfo").textContent = "Stok " + i.stok + " · " + rp(i.harga);
-  $("dBeli").value = "";
-  $("dQty").value = 1; $("dQty").max = i.stok;
+$("cOpen").onclick = () => {
   try { $("dPin").value = localStorage.getItem("pin") || ""; } catch (e) {}
   $("dErr").textContent = "";
-  updTotal();
+  renderLines();
   $("dlg").showModal();
   $("dBeli").focus();
-}
-function updTotal() { $("dTotal").textContent = "Total " + rp((parseInt($("dQty").value, 10) || 0) * current.harga); }
-$("dQty").oninput = updTotal;
-$("dBatal").onclick = () => { $("dlg").close(); render(); };
+};
+$("dBatal").onclick = () => $("dlg").close();
 
 $("dOk").onclick = async () => {
-  const qty = parseInt($("dQty").value, 10), pin = $("dPin").value;
-  if (!qty || qty < 1) { $("dErr").textContent = "Isi jumlah minimal 1."; return; }
+  const pin = $("dPin").value;
+  const list = Object.keys(cart).map(k => ({ kode: k, qty: cart[k] }));
+  if (!list.length) return;
   if (!pin) { $("dErr").textContent = "Isi PIN kasir."; return; }
   $("dOk").disabled = true; $("dOk").textContent = "Menyimpan…";
   try {
     // text/plain agar tidak memicu preflight CORS di Apps Script
     const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({ action: "jual", kode: current.kode, qty, pin, pembeli: $("dBeli").value.trim() }) });
+      body: JSON.stringify({ action: "jual", items: list, pin, pembeli: $("dBeli").value.trim() }) });
     const d = await r.json();
     if (!d.ok) { $("dErr").textContent = d.error; return; }
     try { localStorage.setItem("pin", pin); } catch (e) {}
+    Object.keys(cart).forEach(k => delete cart[k]);
+    $("dBeli").value = "";
     $("dlg").close();
-    toast("Tercatat. Sisa " + current.nama + ": " + d.sisa);
-    await load(); render();
+    toast("Tercatat. Total " + rp(d.total));
+    await load();
   } catch (e) {
     $("dErr").textContent = "Koneksi gagal. Coba lagi.";
   } finally {
