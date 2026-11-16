@@ -317,9 +317,15 @@ function openBeli(b) {
       : +v.harga > 0 ? "Total belanja: " + rp(v.qty * v.harga) : "",
     done: d => b.nama + " kini " + fmt(d.stok) + " " + b.satuan });
 }
-$("bBaru").onclick = () => ask({ title: "Bahan / barang baru", info: "Stok awal 0. Isi stok lewat tombol Beli.", action: "bahanBaru", ok: "Tambah",
-  fields: [{ k: "nama", label: "Nama" }, { k: "satuan", label: "Satuan", ph: "gram, ml, pcs, lembar…" }, { k: "jenis", label: "Jenis", ph: "Bahan baku / Kemasan / Barang" }, { k: "min", label: "Stok minimum (notifikasi)", type: "number" }],
-  build: v => ({ nama: v.nama, satuan: v.satuan, jenis: v.jenis, min: +v.min }), done: () => "Bahan ditambahkan" });
+$("bBaru").onclick = () => ask({ title: "Bahan / barang baru", info: "Jika sudah dibeli, isi jumlah dan harga sekalian. Kosongkan jika belum.", action: "bahanBaru", ok: "Tambah",
+  fields: [{ k: "nama", label: "Nama" }, { k: "satuan", label: "Satuan", ph: "gram, ml, pcs, lembar…" },
+    { k: "jenis", label: "Jenis", ph: "Bahan baku / Kemasan / Barang" }, { k: "min", label: "Stok minimum (notifikasi)", type: "number" },
+    { k: "qty", label: "Jumlah dibeli (opsional)", type: "number" }, { k: "harga", label: "Harga per satuan (Rp)", type: "number" },
+    { k: "total", label: "Atau total harga belanja (Rp)", type: "number" }, { k: "supplier", label: "Supplier (opsional)" }],
+  build: v => ({ nama: v.nama, satuan: v.satuan, jenis: v.jenis, min: +v.min, qty: +v.qty, total: +v.total || (+v.qty * +v.harga), supplier: v.supplier }),
+  prev: v => !(+v.qty > 0) ? "" : !(+v.total > 0 || +v.harga > 0) ? "Isi harga agar pembelian ini tercatat."
+    : +v.total > 0 ? "Harga per " + (v.satuan || "satuan") + ": " + rp(v.total / v.qty) : "Total belanja: " + rp(v.qty * v.harga),
+  done: d => d.stok ? "Bahan ditambahkan. Stok awal " + fmt(d.stok) : "Bahan ditambahkan" });
 
 /* ---------- Produksi ---------- */
 function fillProduk() {
